@@ -30,6 +30,20 @@ jobs:
           cd -
           strip -s ./bin/multicraft.exe
 
+      # Збирає DLL, від яких залежить multicraft.exe (компілятор MinGW),
+      # і кладе їх поруч з exe. Без цього гра не запускається
+      # (код помилки -1073741515 = DLL not found).
+      - name: Bundle required DLLs
+        run: |
+          echo "=== DLL, які імпортує multicraft.exe ==="
+          objdump -p ./bin/multicraft.exe | grep "DLL Name" || true
+          echo "=== Копіюю DLL з /mingw64 ==="
+          ldd ./bin/multicraft.exe | grep -i "/mingw64/" | awk '{print $3}' | sort -u | while read f; do
+            cp -v "$f" ./bin/
+          done
+          echo "=== Вміст bin ==="
+          ls -la ./bin
+
       # Рушій містить лише тестову гру devtest. Для справжнього геймплею
       # додаємо Minetest Game (вільна ліцензія, LGPL/CC BY-SA).
       - name: Add a playable game
